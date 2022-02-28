@@ -1,27 +1,6 @@
 /*
-Last Modified time: 2021-5-11 09:27:09
-活动入口：京东APP首页-领京豆-摇京豆/京东APP首页-我的-京东会员-摇京豆
-增加京东APP首页超级摇一摇(不定时有活动)
-增加超级品牌日做任务及抽奖
-增加 京东小魔方 抽奖
-Modified from https://github.com/Zero-S1/JD_tools/blob/master/JD_vvipclub.py
-已支持IOS双京东账号,Node.js支持N个京东账号
-脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
-============QuantumultX==============
-[task_local]
-#摇京豆
-5 0,23 * * * jd_club_lottery.js, tag=摇京豆, img-url=https://raw.githubusercontent.com/58xinian/icon/master/jdyjd.png, enabled=true
-=================Loon===============
-[Script]
-cron "5 0,23 * * *" script-path=jd_club_lottery.js,tag=摇京豆
-=================Surge==============
-[Script]
-摇京豆 = type=cron,cronexp="5 0,23 * * *",wake-system=1,timeout=3600,script-path=jd_club_lottery.js
-
-============小火箭=========
-摇京豆 = type=cron,script-path=jd_club_lottery.js, cronexpr="5 0,23 * * *", timeout=3600, enable=true
+cron "0 0 * * *" jd_club_lottery.js, tag:摇京豆
 */
-
 const $ = new Env('摇京豆');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
@@ -1214,9 +1193,9 @@ function pg_interact_interface_invoke(body) {
 function TotalBean() {
   return new Promise(async resolve => {
     const options = {
-      url: "https://wq.jd.com/user_new/info/GetJDUserInfoUnion?sceneval=2",
+      url: "https://me-api.jd.com/user_new/info/GetJDUserInfoUnion",
       headers: {
-        Host: "wq.jd.com",
+        Host: "me-api.jd.com",
         Accept: "*/*",
         Connection: "keep-alive",
         Cookie: cookie,
@@ -1233,15 +1212,15 @@ function TotalBean() {
         } else {
           if (data) {
             data = JSON.parse(data);
-            if (data['retcode'] === 1001) {
+            if (data['retcode'] === "1001") {
               $.isLogin = false; //cookie过期
               return;
             }
-            if (data['retcode'] === 0 && data.data && data.data.hasOwnProperty("userInfo")) {
+            if (data['retcode'] === "0" && data.data && data.data.hasOwnProperty("userInfo")) {
               $.nickName = data.data.userInfo.baseInfo.nickname;
             }
           } else {
-            console.log('京东服务器返回空数据');
+            $.log('京东服务器返回空数据');
           }
         }
       } catch (e) {
@@ -1262,6 +1241,16 @@ function jsonParse(str) {
       return [];
     }
   }
+}
+async function getUA(){
+  $.UA = `jdapp;iPhone;10.2.2;14.3;${randomString(40)};M/5.0;network/wifi;ADID/;model/iPhone12,1;addressid/4199175193;appBuild/167863;jdSupportDarkMode/0;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1;`
+}
+function randomString(e) {
+  e = e || 32;
+  let t = "abcdef0123456789", a = t.length, n = "";
+  for (i = 0; i < e; i++)
+    n += t.charAt(Math.floor(Math.random() * a));
+  return n
 }
 function taskUrl(function_id, body = {}, appId = 'vip_h5') {
   return {
